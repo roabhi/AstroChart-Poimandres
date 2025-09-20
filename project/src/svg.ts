@@ -714,8 +714,8 @@ class SVG {
     wrapper.setAttribute('transform', 'translate(' + (-x * (this.settings.SYMBOL_SCALE - 1)) + ',' + (-y * (this.settings.SYMBOL_SCALE - 1)) + ') scale(' + this.settings.SYMBOL_SCALE + ')')
 
     const node = document.createElementNS(this.context.root.namespaceURI, 'path')
-    // Simple test shape to verify the custom icons work
-    node.setAttribute('d', 'm ' + x + ', ' + y + ' 0,-10 10,0 0,10 -10,0 z')
+    // Simple test shape centered around x,y
+    node.setAttribute('d', 'm ' + x + ', ' + y + ' -5,-5 10,0 0,10 -10,0 z')
     node.setAttribute('stroke', this.settings.SIGNS_COLOR)
     node.setAttribute('stroke-width', this.settings.SIGNS_STROKE.toString())
     node.setAttribute('fill', this.settings.SIGNS_COLOR)
