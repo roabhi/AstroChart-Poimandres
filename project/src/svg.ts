@@ -715,7 +715,7 @@ class SVG {
 
     const node = document.createElementNS(this.context.root.namespaceURI, 'path')
     // Simple test shape using the MODIFIED x,y (after xShift/yShift applied above)
-    node.setAttribute('d', 'm ' + x + ', ' + y + ' 0,0 5,0 0,5 -5,0 z')
+    node.setAttribute('d', 'm ' + x + ', ' + y + ' -2.5,-2.5 5,0 0,5 -5,0 z')
     node.setAttribute('stroke', this.settings.SIGNS_COLOR)
     node.setAttribute('stroke-width', this.settings.SIGNS_STROKE.toString())
     node.setAttribute('fill', this.settings.SIGNS_COLOR)
