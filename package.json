@@ -1,7 +1,7 @@
 {
-  "name": "@astrodraw/astrochart",
-  "version": "3.0.2",
-  "description": "A free and open-source JavaScript library for generating SVG charts to display planets in astrology.",
+  "name": "@roabhi/astrochart-extended",
+  "version": "3.0.2-extended.1",
+  "description": "Extended AstroChart library with support for decans, lunar mansions, and traditional astrological dignities.",
   "keywords": [
     "astrology",
     "chart",
@@ -12,7 +12,7 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/AstroDraw/AstroChart.git"
+    "url": "https://github.com/roabhi/AstroChart-Poimandres.git"
   },
   "main": "./dist/astrochart.js",
   "types": "./dist/project/src/index.d.ts",
