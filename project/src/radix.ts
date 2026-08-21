@@ -11,6 +11,9 @@ import {
   , getDescriptionPosition
   , getDashedLinesPositions
   , assemble
+  , normalizeAngle
+  , splitDegreeMinute
+  , SIGN_GLYPHS
 } from './utils'
 import type SVG from './svg'
 import type { Settings } from './settings'
@@ -185,7 +188,19 @@ class Radix {
       wrapper.appendChild(symbol)
 
       // draw point descriptions
-      let textsToShow = [(Math.floor(this.data.planets[point.name][0]) % 30).toString()]
+      const longitude = this.data.planets[point.name][0]
+
+      // SHOW_POINT_DEGREES off keeps the upstream label: a bare whole-degree
+      // number. On, it becomes three rows -- degree, sign glyph, minutes --
+      // matching how a printed chart states a position.
+      const dm = splitDegreeMinute(longitude)
+      let textsToShow = this.settings.SHOW_POINT_DEGREES
+        ? [
+            dm.degrees.toString() + '\u00B0',
+            SIGN_GLYPHS[Math.floor(normalizeAngle(longitude) / 30) % 12],
+            dm.minutes.toString().padStart(2, '0') + '\u2032'
+          ]
+        : [(Math.floor(longitude) % 30).toString()]
 
       const zodiac = new Zodiac(this.data.cusps, this.settings)
 
@@ -200,7 +215,7 @@ class Radix {
 
       const pointDescriptions = getDescriptionPosition(point, textsToShow, this.settings)
       pointDescriptions.forEach(function (dsc) {
-        wrapper.appendChild(this.paper.text(dsc.text, dsc.x, dsc.y, this.settings.POINTS_TEXT_SIZE, this.settings.SIGNS_COLOR))
+        wrapper.appendChild(this.paper.text(dsc.text, dsc.x, dsc.y, this.settings.POINTS_TEXT_SIZE, this.settings.POINTS_TEXT_COLOR ?? this.settings.SIGNS_COLOR))
       }, this)
     }, this)
   }
@@ -229,7 +244,7 @@ class Radix {
       startPosition = getPointPosition(this.cx, this.cy, this.radius, this.data.cusps[i] + this.shift, this.settings)
       endPosition = getPointPosition(this.cx, this.cy, axisRadius, this.data.cusps[i] + this.shift, this.settings)
       overlapLine = this.paper.line(startPosition.x, startPosition.y, endPosition.x, endPosition.y)
-      overlapLine.setAttribute('stroke', this.settings.LINE_COLOR)
+      overlapLine.setAttribute('stroke', this.settings.AXIS_LINE_COLOR ?? this.settings.LINE_COLOR)
       overlapLine.setAttribute('stroke-width', (this.settings.SYMBOL_AXIS_STROKE * this.settings.SYMBOL_SCALE))
       wrapper.appendChild(overlapLine)
 
@@ -299,11 +314,15 @@ class Radix {
 
       lines.forEach(function (line) {
         const newLine = this.paper.line(line.startX, line.startY, line.endX, line.endY)
-        newLine.setAttribute('stroke', this.settings.LINE_COLOR)
 
         if (mainAxis.includes(i)) {
+          // The four angles. AXIS_LINE_COLOR lets them read differently from the
+          // eight ordinary cusps, which upstream cannot do -- both took
+          // LINE_COLOR and were separable only by stroke width.
+          newLine.setAttribute('stroke', this.settings.AXIS_LINE_COLOR ?? this.settings.LINE_COLOR)
           newLine.setAttribute('stroke-width', (this.settings.SYMBOL_AXIS_STROKE * this.settings.SYMBOL_SCALE))
         } else {
+          newLine.setAttribute('stroke', this.settings.LINE_COLOR)
           newLine.setAttribute('stroke-width', (this.settings.CUSPS_STROKE * this.settings.SYMBOL_SCALE))
         }
 
@@ -393,6 +412,38 @@ class Radix {
     circle.setAttribute('stroke', this.settings.CIRCLE_COLOR)
     circle.setAttribute('stroke-width', (this.settings.CUSPS_STROKE * this.settings.SYMBOL_SCALE).toString())
     wrapper.appendChild(circle)
+  }
+
+  /**
+   * Draw each house cusp's degree just outside the outer circle.
+   *
+   * Upstream draws nothing here. The label states where the cusp actually falls
+   * (e.g. 28\u00B040\u2032), which is the information a whole-sign chart hides -- there
+   * the cusps sit at 0\u00B0 of each sign but the ANGLES do not, and the difference
+   * is exactly what a reader needs to see.
+   *
+   * Rendered outside this.radius so it never collides with the zodiac band.
+   */
+  drawCuspDegrees(): void {
+    if (!this.settings.SHOW_CUSP_DEGREES) {
+      return
+    }
+
+    const universe = this.universe
+    const wrapper = getEmptyWrapper(universe, this.paper.root.id + '-' + this.settings.ID_RADIX + '-cusp-degrees', this.paper.root.id)
+
+    // Sits in the same band the axis stubs occupy, one text height further out.
+    const labelRadius = this.radius + (this.radius / this.settings.INNER_CIRCLE_RADIUS_RATIO) / this.settings.RULER_RADIUS + (this.settings.POINTS_TEXT_SIZE * this.settings.SYMBOL_SCALE)
+
+    for (let i = 0; i < this.data.cusps.length; i++) {
+      const dm = splitDegreeMinute(this.data.cusps[i])
+      const label = dm.degrees.toString() + '\u00B0' + dm.minutes.toString().padStart(2, '0') + '\u2032'
+
+      const position = getPointPosition(this.cx, this.cy, labelRadius, this.data.cusps[i] + this.shift, this.settings)
+      const text = this.paper.text(label, position.x, position.y, this.settings.POINTS_TEXT_SIZE, this.settings.POINTS_TEXT_COLOR ?? this.settings.SIGNS_COLOR)
+      text.setAttribute('text-anchor', 'middle')
+      wrapper.appendChild(text)
+    }
   }
 
   /**

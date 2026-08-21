@@ -49,6 +49,15 @@ declare class SVG {
      */
     getSignWrapperId(sign: string): string;
     /**
+     * Stroke colour for one sign's glyph.
+     *
+     * SIGNS_COLORS is keyed by sign NAME rather than by index because the
+     * COLORS_SIGNS array is walked positionally from the ascendant -- index N
+     * only corresponds to the Nth zodiac sign on whole-sign charts. Any sign the
+     * caller does not list falls back to the flat SIGNS_COLOR.
+     */
+    getSignColor(sign: string): string;
+    /**
      * Get ID for house wrapper.
      *
      * @param {String} house
@@ -159,6 +168,6 @@ declare class SVG {
    *
    * @return {SVGElement} text
    */
-    text(txt: string, x: number, y: number, size: string, color: string): Element;
+    text(txt: string, x: number, y: number, size: string | number, color: string): Element;
 }
 export default SVG;

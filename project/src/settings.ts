@@ -111,6 +111,34 @@ export interface Settings {
   DIGNITIES_EXACT_EXALTATION_DEFAULT: Dignity[]
   ANIMATION_CUSPS_ROTATION_SPEED: number
   DEBUG: boolean
+
+  // --- Poimandres extensions -------------------------------------------------
+  // All default to null/false so behaviour is unchanged until a consumer opts in.
+
+  // Per-sign colour for the sign GLYPH, keyed by sign NAME ('Aries', ...).
+  // Deliberately name-keyed rather than an array: COLORS_SIGNS is indexed
+  // positionally from the ascendant, so index N only lines up with the zodiac
+  // on whole-sign charts. Falls back to SIGNS_COLOR for any sign not listed.
+  SIGNS_COLORS: Record<string, string> | null
+
+  // Colour for the four angular (As/Ds/Mc/Ic) cusp lines and the axis stubs.
+  // Upstream draws these with LINE_COLOR, the same as ordinary house cusps, so
+  // they cannot be distinguished without this. Falls back to LINE_COLOR.
+  AXIS_LINE_COLOR: string | null
+
+  // Colour of the description text beside a planet. Upstream reads SIGNS_COLOR
+  // for this, which couples planet labels to the zodiac colour; setting this
+  // decouples them. Falls back to SIGNS_COLOR.
+  POINTS_TEXT_COLOR: string | null
+
+  // Show the degree / sign glyph / minutes rows beside each planet.
+  SHOW_POINT_DEGREES: boolean
+
+  // Show each house cusp's degree just outside the outer circle.
+  SHOW_CUSP_DEGREES: boolean
+
+  // Typeface for every <text> node. Upstream hardcodes 'serif'.
+  FONT_FAMILY: string
 }
 
 const settings: Settings = {
@@ -312,7 +340,15 @@ const settings: Settings = {
   // 0 - 4
   ANIMATION_CUSPS_ROTATION_SPEED: 2,
 
-  DEBUG: false
+  DEBUG: false,
+
+  // --- Poimandres extensions (see interface for rationale) -------------------
+  SIGNS_COLORS: null,
+  AXIS_LINE_COLOR: null,
+  POINTS_TEXT_COLOR: null,
+  SHOW_POINT_DEGREES: false,
+  SHOW_CUSP_DEGREES: false,
+  FONT_FAMILY: 'serif'
 }
 
 const default_settings = settings

@@ -73,6 +73,17 @@ declare class Radix {
     addPointsOfInterest(points: Points): Radix;
     drawRuler(): void;
     /**
+     * Draw each house cusp's degree just outside the outer circle.
+     *
+     * Upstream draws nothing here. The label states where the cusp actually falls
+     * (e.g. 28\u00B040\u2032), which is the information a whole-sign chart hides -- there
+     * the cusps sit at 0\u00B0 of each sign but the ANGLES do not, and the difference
+     * is exactly what a reader needs to see.
+     *
+     * Rendered outside this.radius so it never collides with the zodiac band.
+     */
+    drawCuspDegrees(): void;
+    /**
      * Draw circles
      */
     drawCircles(): void;

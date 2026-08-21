@@ -64,6 +64,7 @@ class Chart {
     radix.drawCusps()
     radix.drawAxis()
     radix.drawCircles()
+    radix.drawCuspDegrees()
 
     return radix
   }

@@ -18,6 +18,40 @@ export const getPointPosition = (cx: number, cy: number, radius: number, angle: 
   return { x: xPos, y: yPos }
 }
 
+/**
+ * Unicode zodiac glyphs, in zodiac order starting at Aries.
+ *
+ * Used for the sign shown beside a planet's degree. Text rather than the
+ * hand-drawn SVG paths used on the wheel itself: at label size the path glyphs
+ * carry their own stroke width and centering offsets, which do not scale down
+ * legibly.
+ */
+export const SIGN_GLYPHS: string[] = [
+  '\u2648', '\u2649', '\u264A', '\u264B', '\u264C', '\u264D',
+  '\u264E', '\u264F', '\u2650', '\u2651', '\u2652', '\u2653'
+]
+
+/** Fold any longitude into [0, 360). */
+export const normalizeAngle = (angle: number): number => ((angle % 360) + 360) % 360
+
+/**
+ * Split a longitude into its degree and minute within the sign.
+ *
+ * The obvious `Math.floor((lon % 1) * 60)` is a minute out on values that are
+ * exact in decimal but not in binary: 60.05 gives `0.04999999999999716`, which
+ * floors to 2\u2032 instead of 3\u2032. Rounding the total minutes to two decimals first
+ * absorbs that noise while keeping floor semantics, so a body still never reads
+ * as a degree it has not reached.
+ */
+export const splitDegreeMinute = (longitude: number): { degrees: number; minutes: number } => {
+  const withinSign = normalizeAngle(longitude) % 30
+  const totalMinutes = Math.round(withinSign * 60 * 100) / 100
+  return {
+    degrees: Math.floor(totalMinutes / 60),
+    minutes: Math.floor(totalMinutes % 60)
+  }
+}
+
 export const degreeToRadians = (degrees: number): number => degrees * Math.PI / 180
 
 export const radiansToDegree = (radians: number): number => radians * 180 / Math.PI

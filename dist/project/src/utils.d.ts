@@ -16,6 +16,30 @@ export declare const getPointPosition: (cx: number, cy: number, radius: number, 
     x: number;
     y: number;
 };
+/**
+ * Unicode zodiac glyphs, in zodiac order starting at Aries.
+ *
+ * Used for the sign shown beside a planet's degree. Text rather than the
+ * hand-drawn SVG paths used on the wheel itself: at label size the path glyphs
+ * carry their own stroke width and centering offsets, which do not scale down
+ * legibly.
+ */
+export declare const SIGN_GLYPHS: string[];
+/** Fold any longitude into [0, 360). */
+export declare const normalizeAngle: (angle: number) => number;
+/**
+ * Split a longitude into its degree and minute within the sign.
+ *
+ * The obvious `Math.floor((lon % 1) * 60)` is a minute out on values that are
+ * exact in decimal but not in binary: 60.05 gives `0.04999999999999716`, which
+ * floors to 2\u2032 instead of 3\u2032. Rounding the total minutes to two decimals first
+ * absorbs that noise while keeping floor semantics, so a body still never reads
+ * as a degree it has not reached.
+ */
+export declare const splitDegreeMinute: (longitude: number) => {
+    degrees: number;
+    minutes: number;
+};
 export declare const degreeToRadians: (degrees: number) => number;
 export declare const radiansToDegree: (radians: number) => number;
 interface TextLocation {

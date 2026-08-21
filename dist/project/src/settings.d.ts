@@ -113,6 +113,12 @@ export interface Settings {
     DIGNITIES_EXACT_EXALTATION_DEFAULT: Dignity[];
     ANIMATION_CUSPS_ROTATION_SPEED: number;
     DEBUG: boolean;
+    SIGNS_COLORS: Record<string, string> | null;
+    AXIS_LINE_COLOR: string | null;
+    POINTS_TEXT_COLOR: string | null;
+    SHOW_POINT_DEGREES: boolean;
+    SHOW_CUSP_DEGREES: boolean;
+    FONT_FAMILY: string;
 }
 declare const default_settings: Settings;
 export default default_settings;
