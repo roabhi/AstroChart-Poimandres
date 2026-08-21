@@ -139,6 +139,26 @@ export interface Settings {
 
   // Typeface for every <text> node. Upstream hardcodes 'serif'.
   FONT_FAMILY: string
+
+  // True longitudes of the four angles. Upstream draws the axis from
+  // cusps[0/3/6/9], which IS the axis under Placidus, Koch and the rest -- but
+  // NOT under whole-sign, where the cusps sit at 0 degrees of each sign while
+  // the Ascendant falls somewhere inside the rising sign. Passing the angles
+  // explicitly puts the axis on the real Ascendant/Midheaven for every house
+  // system. Falls back to the cusps when null.
+  AXIS_POSITIONS: { As: number; Ds: number; Mc: number; Ic: number } | null
+
+  // Draw the axis as a full line across the wheel rather than only a short stub
+  // outside the rim.
+  DRAW_AXIS_LINE: boolean
+
+  // Label each angle with its degree and minutes, next to the As/Ds/Mc/Ic glyph.
+  SHOW_AXIS_DEGREES: boolean
+
+  // Upstream breaks every cusp line into segments to dodge the planet glyphs,
+  // which leaves visible gaps in the ring. False draws each cusp as one
+  // unbroken line.
+  CUSPS_SPLIT_AROUND_POINTS: boolean
 }
 
 const settings: Settings = {
@@ -348,7 +368,11 @@ const settings: Settings = {
   POINTS_TEXT_COLOR: null,
   SHOW_POINT_DEGREES: false,
   SHOW_CUSP_DEGREES: false,
-  FONT_FAMILY: 'serif'
+  FONT_FAMILY: 'serif',
+  AXIS_POSITIONS: null,
+  DRAW_AXIS_LINE: false,
+  SHOW_AXIS_DEGREES: false,
+  CUSPS_SPLIT_AROUND_POINTS: true
 }
 
 const default_settings = settings

@@ -119,6 +119,15 @@ export interface Settings {
     SHOW_POINT_DEGREES: boolean;
     SHOW_CUSP_DEGREES: boolean;
     FONT_FAMILY: string;
+    AXIS_POSITIONS: {
+        As: number;
+        Ds: number;
+        Mc: number;
+        Ic: number;
+    } | null;
+    DRAW_AXIS_LINE: boolean;
+    SHOW_AXIS_DEGREES: boolean;
+    CUSPS_SPLIT_AROUND_POINTS: boolean;
 }
 declare const default_settings: Settings;
 export default default_settings;

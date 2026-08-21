@@ -238,41 +238,80 @@ class Radix {
     let startPosition
     let endPosition
 
+    // Under whole-sign the cusps are the sign boundaries, not the angles, so
+    // reading the axis off cusps[0/3/6/9] would draw it at 0 degrees of the
+    // rising sign instead of on the Ascendant. AXIS_POSITIONS carries the real
+    // longitudes; the cusps remain the fallback for house systems where the two
+    // are the same thing.
+    const axisAngles = this.settings.AXIS_POSITIONS
+    const angleFor = (i: number): number => {
+      if (axisAngles == null) return this.data.cusps[i]
+      if (i === AS) return axisAngles.As
+      if (i === IC) return axisAngles.Ic
+      if (i === DC) return axisAngles.Ds
+      return axisAngles.Mc
+    }
+
+    const axisColor = this.settings.AXIS_LINE_COLOR ?? this.settings.LINE_COLOR;
+
     [AS, IC, DC, MC].forEach(function (i) {
       let textPosition
+      const angle = angleFor(i)
+
+      // The axis proper: one unbroken line from the indoor circle out to the
+      // rim, so the Ascendant and Midheaven read as axes of the chart rather
+      // than as two more house cusps.
+      if (this.settings.DRAW_AXIS_LINE) {
+        const innerPosition = getPointPosition(this.cx, this.cy, this.radius / this.settings.INDOOR_CIRCLE_RADIUS_RATIO, angle + this.shift, this.settings)
+        const outerPosition = getPointPosition(this.cx, this.cy, this.radius, angle + this.shift, this.settings)
+        const axisLine = this.paper.line(innerPosition.x, innerPosition.y, outerPosition.x, outerPosition.y)
+        axisLine.setAttribute('stroke', axisColor)
+        axisLine.setAttribute('stroke-width', (this.settings.SYMBOL_AXIS_STROKE * this.settings.SYMBOL_SCALE))
+        wrapper.appendChild(axisLine)
+      }
+
       // overlap
-      startPosition = getPointPosition(this.cx, this.cy, this.radius, this.data.cusps[i] + this.shift, this.settings)
-      endPosition = getPointPosition(this.cx, this.cy, axisRadius, this.data.cusps[i] + this.shift, this.settings)
+      startPosition = getPointPosition(this.cx, this.cy, this.radius, angle + this.shift, this.settings)
+      endPosition = getPointPosition(this.cx, this.cy, axisRadius, angle + this.shift, this.settings)
       overlapLine = this.paper.line(startPosition.x, startPosition.y, endPosition.x, endPosition.y)
-      overlapLine.setAttribute('stroke', this.settings.AXIS_LINE_COLOR ?? this.settings.LINE_COLOR)
+      overlapLine.setAttribute('stroke', axisColor)
       overlapLine.setAttribute('stroke-width', (this.settings.SYMBOL_AXIS_STROKE * this.settings.SYMBOL_SCALE))
       wrapper.appendChild(overlapLine)
+
+      if (this.settings.SHOW_AXIS_DEGREES) {
+        const dm = splitDegreeMinute(angle)
+        const degreeLabel = dm.degrees.toString() + '\u00B0' + dm.minutes.toString().padStart(2, '0') + '\u2032'
+        const labelPosition = getPointPosition(this.cx, this.cy, axisRadius + (32 * this.settings.SYMBOL_SCALE), angle + this.shift, this.settings)
+        const label = this.paper.text(degreeLabel, labelPosition.x, labelPosition.y, this.settings.POINTS_TEXT_SIZE, axisColor)
+        label.setAttribute('text-anchor', 'middle')
+        wrapper.appendChild(label)
+      }
 
       // As
       if (i === AS) {
         // Text
-        textPosition = getPointPosition(this.cx, this.cy, axisRadius + (20 * this.settings.SYMBOL_SCALE), this.data.cusps[i] + this.shift, this.settings)
+        textPosition = getPointPosition(this.cx, this.cy, axisRadius + (20 * this.settings.SYMBOL_SCALE), angle + this.shift, this.settings)
         wrapper.appendChild(this.paper.getSymbol(this.settings.SYMBOL_AS, textPosition.x, textPosition.y))
       }
 
       // Ds
       if (i === DC) {
         // Text
-        textPosition = getPointPosition(this.cx, this.cy, axisRadius + (2 * this.settings.SYMBOL_SCALE), this.data.cusps[i] + this.shift, this.settings)
+        textPosition = getPointPosition(this.cx, this.cy, axisRadius + (2 * this.settings.SYMBOL_SCALE), angle + this.shift, this.settings)
         wrapper.appendChild(this.paper.getSymbol(this.settings.SYMBOL_DS, textPosition.x, textPosition.y))
       }
 
       // Ic
       if (i === IC) {
         // Text
-        textPosition = getPointPosition(this.cx, this.cy, axisRadius + (10 * this.settings.SYMBOL_SCALE), this.data.cusps[i] - 2 + this.shift, this.settings)
+        textPosition = getPointPosition(this.cx, this.cy, axisRadius + (10 * this.settings.SYMBOL_SCALE), angle - 2 + this.shift, this.settings)
         wrapper.appendChild(this.paper.getSymbol(this.settings.SYMBOL_IC, textPosition.x, textPosition.y))
       }
 
       // Mc
       if (i === MC) {
         // Text
-        textPosition = getPointPosition(this.cx, this.cy, axisRadius + (10 * this.settings.SYMBOL_SCALE), this.data.cusps[i] + 2 + this.shift, this.settings)
+        textPosition = getPointPosition(this.cx, this.cy, axisRadius + (10 * this.settings.SYMBOL_SCALE), angle + 2 + this.shift, this.settings)
         wrapper.appendChild(this.paper.getSymbol(this.settings.SYMBOL_MC, textPosition.x, textPosition.y))
       }
     }, this)
@@ -300,17 +339,29 @@ class Radix {
 
     // Cusps
     for (let i = 0, ln = this.data.cusps.length; i < ln; i++) {
-      // Draws a dashed line when an point is in the way
-      lines = getDashedLinesPositions(
-        this.cx,
-        this.cy,
-        this.data.cusps[i] + this.shift,
-        this.radius / this.settings.INDOOR_CIRCLE_RADIUS_RATIO,
-        this.radius - (this.radius / this.settings.INNER_CIRCLE_RADIUS_RATIO + this.rulerRadius),
-        this.pointRadius,
-        this.locatedPoints,
-        this.settings
-      )
+      const lineStartRadius = this.radius / this.settings.INDOOR_CIRCLE_RADIUS_RATIO
+      const lineEndRadius = this.radius - (this.radius / this.settings.INNER_CIRCLE_RADIUS_RATIO + this.rulerRadius)
+
+      if (this.settings.CUSPS_SPLIT_AROUND_POINTS) {
+        // Draws a dashed line when an point is in the way
+        lines = getDashedLinesPositions(
+          this.cx,
+          this.cy,
+          this.data.cusps[i] + this.shift,
+          lineStartRadius,
+          lineEndRadius,
+          this.pointRadius,
+          this.locatedPoints,
+          this.settings
+        )
+      } else {
+        // One unbroken line. Splitting around the planet glyphs leaves visible
+        // holes in the ring; drawing the cusps first and letting the glyphs sit
+        // on top of them reads as a continuous wheel instead.
+        const startPoint = getPointPosition(this.cx, this.cy, lineStartRadius, this.data.cusps[i] + this.shift, this.settings)
+        const endPoint = getPointPosition(this.cx, this.cy, lineEndRadius, this.data.cusps[i] + this.shift, this.settings)
+        lines = [{ startX: startPoint.x, startY: startPoint.y, endX: endPoint.x, endY: endPoint.y }]
+      }
 
       lines.forEach(function (line) {
         const newLine = this.paper.line(line.startX, line.startY, line.endX, line.endY)

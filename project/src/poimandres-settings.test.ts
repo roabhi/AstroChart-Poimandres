@@ -192,6 +192,78 @@ describe('SHOW_CUSP_DEGREES', () => {
   })
 })
 
+describe('AXIS_POSITIONS (whole-sign angles)', () => {
+  // Whole-sign: cusps sit at 0 degrees of each sign, but the Ascendant is at
+  // 9 degrees Capricorn. Reading the axis off cusps[0] would draw it on the
+  // sign boundary instead of on the Ascendant -- the exact bug this fixes.
+  const wholeSignCusps = [270, 300, 330, 0, 30, 60, 90, 120, 150, 180, 210, 240]
+  const trueAngles = { As: 279.11, Ds: 99.11, Mc: 202.15, Ic: 22.15 }
+
+  const axisLineCount = (settings: typeof default_settings) => {
+    mount()
+    const paper = new SVG('chart', 500, 500, settings)
+    const radix = new Radix(paper, 250, 250, 200, { ...data, cusps: wholeSignCusps }, settings)
+    radix.drawAxis()
+    return document.querySelectorAll('#chart-astrology-radix-axis line').length
+  }
+
+  it('draws only the four stubs by default', () => {
+    expect(axisLineCount({ ...default_settings, DRAW_AXIS_LINE: false })).toBe(4)
+  })
+
+  it('adds a full axis line per angle when asked', () => {
+    expect(axisLineCount({ ...default_settings, DRAW_AXIS_LINE: true })).toBe(8)
+  })
+
+  it('puts the axis on the cusps when no angles are given', () => {
+    mount()
+    const settings = { ...default_settings, AXIS_POSITIONS: null, SHOW_AXIS_DEGREES: true }
+    const paper = new SVG('chart', 500, 500, settings)
+    new Radix(paper, 250, 250, 200, { ...data, cusps: wholeSignCusps }, settings).drawAxis()
+    const labels = Array.from(document.querySelectorAll('#chart-astrology-radix-axis text')).map((t) => t.textContent)
+    // cusps[0] is 270 -> 0 degrees of the sign.
+    expect(labels).toContain('0°00′')
+  })
+
+  it('puts the axis on the TRUE angles when they are given', () => {
+    mount()
+    const settings = { ...default_settings, AXIS_POSITIONS: trueAngles, SHOW_AXIS_DEGREES: true }
+    const paper = new SVG('chart', 500, 500, settings)
+    new Radix(paper, 250, 250, 200, { ...data, cusps: wholeSignCusps }, settings).drawAxis()
+    const labels = Array.from(document.querySelectorAll('#chart-astrology-radix-axis text')).map((t) => t.textContent)
+    // As 279.11 -> 9 degrees 06 minutes, Mc 202.15 -> 22 degrees 09 minutes.
+    // Each appears twice: opposite angles are 180 apart, so they share the same
+    // degree within their respective signs.
+    expect(labels).toContain('9°06′')
+    expect(labels).toContain('22°09′')
+    expect(labels).toHaveLength(4)
+    // And it must NOT still be sitting on the sign boundary.
+    expect(labels).not.toContain('0°00′')
+  })
+})
+
+describe('CUSPS_SPLIT_AROUND_POINTS', () => {
+  const cuspLineCount = (split: boolean) => {
+    mount()
+    const settings = { ...default_settings, CUSPS_SPLIT_AROUND_POINTS: split }
+    const paper = new SVG('chart', 500, 500, settings)
+    const radix = new Radix(paper, 250, 250, 200, data, settings)
+    radix.drawPoints()
+    radix.drawCusps()
+    return document.querySelectorAll('#chart-astrology-radix-cusps line').length
+  }
+
+  it('splits lines around planets by default, producing extra segments', () => {
+    // 12 cusps, but planets in the way break some into two -- that is the
+    // upstream behaviour, and the source of the gaps in the ring.
+    expect(cuspLineCount(true)).toBeGreaterThan(12)
+  })
+
+  it('draws exactly one unbroken line per cusp when splitting is off', () => {
+    expect(cuspLineCount(false)).toBe(12)
+  })
+})
+
 describe('FONT_FAMILY', () => {
   it('defaults to serif, as upstream hardcoded', () => {
     mount()
@@ -215,6 +287,10 @@ describe('defaults are unchanged for existing consumers', () => {
     expect(default_settings.SHOW_POINT_DEGREES).toBe(false)
     expect(default_settings.SHOW_CUSP_DEGREES).toBe(false)
     expect(default_settings.FONT_FAMILY).toBe('serif')
+    expect(default_settings.AXIS_POSITIONS).toBeNull()
+    expect(default_settings.DRAW_AXIS_LINE).toBe(false)
+    expect(default_settings.SHOW_AXIS_DEGREES).toBe(false)
+    expect(default_settings.CUSPS_SPLIT_AROUND_POINTS).toBe(true)
   })
 
   it('a chart drawn with no overrides still renders the standard groups', () => {
