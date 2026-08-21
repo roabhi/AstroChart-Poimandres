@@ -29,7 +29,10 @@ export const getPointPosition = (cx: number, cy: number, radius: number, angle: 
 export const SIGN_GLYPHS: string[] = [
   '\u2648', '\u2649', '\u264A', '\u264B', '\u264C', '\u264D',
   '\u264E', '\u264F', '\u2650', '\u2651', '\u2652', '\u2653'
-]
+// U+FE0E, the text variation selector. Without it browsers resolve these
+// codepoints through a colour emoji font, so the sign beside a planet renders
+// as a small coloured blob instead of a monochrome glyph matching the chart.
+].map((glyph) => glyph + '\uFE0E')
 
 /** Fold any longitude into [0, 360). */
 export const normalizeAngle = (angle: number): number => ((angle % 360) + 360) % 360

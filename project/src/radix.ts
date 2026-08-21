@@ -281,7 +281,7 @@ class Radix {
       if (this.settings.SHOW_AXIS_DEGREES) {
         const dm = splitDegreeMinute(angle)
         const degreeLabel = dm.degrees.toString() + '\u00B0' + dm.minutes.toString().padStart(2, '0') + '\u2032'
-        const labelPosition = getPointPosition(this.cx, this.cy, axisRadius + (32 * this.settings.SYMBOL_SCALE), angle + this.shift, this.settings)
+        const labelPosition = getPointPosition(this.cx, this.cy, axisRadius + (46 * this.settings.SYMBOL_SCALE), angle + this.shift, this.settings)
         const label = this.paper.text(degreeLabel, labelPosition.x, labelPosition.y, this.settings.POINTS_TEXT_SIZE, axisColor)
         label.setAttribute('text-anchor', 'middle')
         wrapper.appendChild(label)
@@ -366,10 +366,11 @@ class Radix {
       lines.forEach(function (line) {
         const newLine = this.paper.line(line.startX, line.startY, line.endX, line.endY)
 
-        if (mainAxis.includes(i)) {
-          // The four angles. AXIS_LINE_COLOR lets them read differently from the
-          // eight ordinary cusps, which upstream cannot do -- both took
-          // LINE_COLOR and were separable only by stroke width.
+        // Only treat cusps 0/3/6/9 as the axis when the caller has NOT supplied
+        // the real angles. Under whole-sign those cusps are the boundaries of
+        // the angular signs, not the Ascendant and Midheaven, so colouring them
+        // as the axis draws a second, wrong axis beside the real one.
+        if (mainAxis.includes(i) && this.settings.AXIS_POSITIONS == null) {
           newLine.setAttribute('stroke', this.settings.AXIS_LINE_COLOR ?? this.settings.LINE_COLOR)
           newLine.setAttribute('stroke-width', (this.settings.SYMBOL_AXIS_STROKE * this.settings.SYMBOL_SCALE))
         } else {
@@ -486,7 +487,24 @@ class Radix {
     // Sits in the same band the axis stubs occupy, one text height further out.
     const labelRadius = this.radius + (this.radius / this.settings.INNER_CIRCLE_RADIUS_RATIO) / this.settings.RULER_RADIUS + (this.settings.POINTS_TEXT_SIZE * this.settings.SYMBOL_SCALE)
 
+    // Angles the axis already labels. Printing the cusp degree there too puts
+    // two identical readings on top of each other.
+    const axisAngles = this.settings.AXIS_POSITIONS
+    const labelledByAxis = this.settings.SHOW_AXIS_DEGREES
+      ? (axisAngles != null
+          ? [axisAngles.As, axisAngles.Ds, axisAngles.Mc, axisAngles.Ic]
+          : [this.data.cusps[0], this.data.cusps[3], this.data.cusps[6], this.data.cusps[9]])
+      : []
+
     for (let i = 0; i < this.data.cusps.length; i++) {
+      const cuspAngle = normalizeAngle(this.data.cusps[i])
+      const collidesWithAxis = labelledByAxis.some(
+        (angle) => Math.abs(normalizeAngle(angle) - cuspAngle) < 0.02
+      )
+      if (collidesWithAxis) {
+        continue
+      }
+
       const dm = splitDegreeMinute(this.data.cusps[i])
       const label = dm.degrees.toString() + '\u00B0' + dm.minutes.toString().padStart(2, '0') + '\u2032'
 

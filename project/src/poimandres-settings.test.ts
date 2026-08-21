@@ -137,7 +137,8 @@ describe('SHOW_POINT_DEGREES', () => {
     const shown = labels(true)
     // Sun 34.5 -> 4°, Taurus, 30'
     expect(shown).toContain('4°')
-    expect(shown).toContain('♉')
+    // U+FE0E is appended to force monochrome text rendering.
+    expect(shown).toContain('♉\uFE0E')
     expect(shown).toContain("30′")
   })
 
@@ -146,7 +147,7 @@ describe('SHOW_POINT_DEGREES', () => {
     // a degree that does not exist in the sign.
     const shown = labels(true)
     expect(shown).toContain('29°')
-    expect(shown).toContain('♌')
+    expect(shown).toContain('♌\uFE0E')
     expect(shown).toContain('59′')
   })
 
