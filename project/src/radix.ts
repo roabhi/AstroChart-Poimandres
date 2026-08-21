@@ -194,20 +194,24 @@ class Radix {
       // number. On, it becomes three rows -- degree, sign glyph, minutes --
       // matching how a printed chart states a position.
       const dm = splitDegreeMinute(longitude)
-      let textsToShow = this.settings.SHOW_POINT_DEGREES
-        ? [
-            dm.degrees.toString() + '\u00B0',
-            SIGN_GLYPHS[Math.floor(normalizeAngle(longitude) / 30) % 12],
-            dm.minutes.toString().padStart(2, '0') + '\u2032'
-          ]
-        : [(Math.floor(longitude) % 30).toString()]
-
       const zodiac = new Zodiac(this.data.cusps, this.settings)
+      const isRetrograde = Boolean(this.data.planets[point.name][1]) && zodiac.isRetrograde(this.data.planets[point.name][1])
 
-      if (this.data.planets[point.name][1] && zodiac.isRetrograde(this.data.planets[point.name][1])) {
-        textsToShow.push('R')
+      let textsToShow: string[]
+
+      if (this.settings.SHOW_POINT_DEGREES) {
+        // Three rows: degree, sign, minutes -- how a printed chart states a
+        // position. The retrograde marker rides on the SIGN row rather than
+        // taking a fourth row of its own; a four-row stack is tall enough to
+        // push neighbouring planets apart via the collision logic, which
+        // visibly scatters a tight cluster.
+        textsToShow = [
+          dm.degrees.toString() + '\u00B0',
+          SIGN_GLYPHS[Math.floor(normalizeAngle(longitude) / 30) % 12] + (isRetrograde ? ' R' : ''),
+          dm.minutes.toString().padStart(2, '0') + '\u2032'
+        ]
       } else {
-        textsToShow.push('')
+        textsToShow = [(Math.floor(longitude) % 30).toString(), isRetrograde ? 'R' : '']
       }
 
       if (this.settings.SHOW_DIGNITIES_TEXT)
