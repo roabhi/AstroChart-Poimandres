@@ -13,7 +13,6 @@ import {
   , assemble
   , normalizeAngle
   , splitDegreeMinute
-  , SIGN_GLYPHS
 } from './utils'
 import type SVG from './svg'
 import type { Settings } from './settings'
@@ -191,8 +190,8 @@ class Radix {
       const longitude = this.data.planets[point.name][0]
 
       // SHOW_POINT_DEGREES off keeps the upstream label: a bare whole-degree
-      // number. On, it becomes three rows -- degree, sign glyph, minutes --
-      // matching how a printed chart states a position.
+      // number. On, it becomes degree + minutes. The zodiac band already gives
+      // the sign, so repeating the sign beside every body adds noise.
       const zodiac = new Zodiac(this.data.cusps, this.settings)
       const motionSpeed = this.data.planets[point.name][1]
       const motionMarker = typeof motionSpeed === 'number'
@@ -209,15 +208,9 @@ class Radix {
         textsToShow = motionMarker ? [motionMarker] : []
       } else if (this.settings.SHOW_POINT_DEGREES) {
         const dm = splitDegreeMinute(longitude)
-        // Three rows: degree, sign, minutes -- how a printed chart states a
-        // position. The retrograde marker rides on the SIGN row rather than
-        // taking a fourth row of its own; a four-row stack is tall enough to
-        // push neighbouring planets apart via the collision logic, which
-        // visibly scatters a tight cluster.
         textsToShow = [
           dm.degrees.toString() + '\u00B0',
-          SIGN_GLYPHS[Math.floor(normalizeAngle(longitude) / 30) % 12] + (motionMarker ? ` ${motionMarker}` : ''),
-          dm.minutes.toString().padStart(2, '0') + '\u2032'
+          dm.minutes.toString().padStart(2, '0') + '\u2032' + (motionMarker ? ` ${motionMarker}` : '')
         ]
       } else {
         textsToShow = [(Math.floor(longitude) % 30).toString(), motionMarker]
@@ -522,7 +515,13 @@ class Radix {
       const label = dm.degrees.toString() + '\u00B0' + dm.minutes.toString().padStart(2, '0') + '\u2032'
 
       const position = getPointPosition(this.cx, this.cy, labelRadius, this.data.cusps[i] + this.shift, this.settings)
-      const text = this.paper.text(label, position.x, position.y, this.settings.POINTS_TEXT_SIZE, this.settings.POINTS_TEXT_COLOR ?? this.settings.SIGNS_COLOR)
+      const text = this.paper.text(
+        label,
+        position.x,
+        position.y,
+        this.settings.POINTS_TEXT_SIZE,
+        this.settings.CUSP_DEGREES_TEXT_COLOR ?? this.settings.POINTS_TEXT_COLOR ?? this.settings.SIGNS_COLOR
+      )
       text.setAttribute('text-anchor', 'middle')
       wrapper.appendChild(text)
     }

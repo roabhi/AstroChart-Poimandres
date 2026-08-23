@@ -131,6 +131,10 @@ export interface Settings {
   // decouples them. Falls back to SIGNS_COLOR.
   POINTS_TEXT_COLOR: string | null
 
+  // Colour of the degree labels outside the zodiac rim. Falls back to
+  // POINTS_TEXT_COLOR, then SIGNS_COLOR.
+  CUSP_DEGREES_TEXT_COLOR: string | null
+
   // Show the degree / sign glyph / minutes rows beside each planet.
   SHOW_POINT_DEGREES: boolean
 
@@ -370,6 +374,7 @@ const settings: Settings = {
   SIGNS_COLORS: null,
   AXIS_LINE_COLOR: null,
   POINTS_TEXT_COLOR: null,
+  CUSP_DEGREES_TEXT_COLOR: null,
   SHOW_POINT_DEGREES: false,
   SHOW_POINT_POSITIONS: true,
   SHOW_CUSP_DEGREES: false,

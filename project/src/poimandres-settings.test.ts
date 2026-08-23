@@ -133,13 +133,14 @@ describe('SHOW_POINT_DEGREES', () => {
     expect(labels(false).join('')).not.toContain('°')
   })
 
-  it('shows degree, sign glyph and minutes when on', () => {
+  it('shows degree and minutes when on', () => {
     const shown = labels(true)
     // Sun 34.5 -> 4°, Taurus, 30'
     expect(shown).toContain('4°')
-    // U+FE0E is appended to force monochrome text rendering.
-    expect(shown).toContain('♉\uFE0E')
     expect(shown).toContain("30′")
+    // The sign is already visible in the zodiac band, so body labels do not
+    // repeat it.
+    expect(shown).not.toContain('♉\uFE0E')
   })
 
   it('floors minutes rather than rounding, so a body never reads ahead of itself', () => {
@@ -147,8 +148,8 @@ describe('SHOW_POINT_DEGREES', () => {
     // a degree that does not exist in the sign.
     const shown = labels(true)
     expect(shown).toContain('29°')
-    expect(shown).toContain('♌\uFE0E')
     expect(shown).toContain('59′')
+    expect(shown).not.toContain('♌\uFE0E')
   })
 
   it('pads minutes to two digits', () => {
@@ -162,6 +163,22 @@ describe('SHOW_POINT_DEGREES', () => {
       document.querySelectorAll('#chart-astrology-radix-planets text')
     ).map((t) => t.textContent)
     expect(shown).toContain('03′')
+  })
+
+  it('keeps motion markers on the minute row', () => {
+    mount()
+    const settings = { ...default_settings, SHOW_POINT_DEGREES: true, SHOW_DIGNITIES_TEXT: false }
+    const paper = new SVG('chart', 500, 500, settings)
+    const radix = new Radix(paper, 250, 250, 200, {
+      ...data,
+      planets: { Moon: [149.99, -0.2], Mars: [60.05, 0.001] }
+    }, settings)
+    radix.drawPoints()
+    const shown = Array.from(
+      document.querySelectorAll('#chart-astrology-radix-planets text')
+    ).map((t) => t.textContent)
+    expect(shown).toContain('59′ R')
+    expect(shown).toContain('03′ S')
   })
 
   it('can hide position labels while keeping motion markers', () => {
@@ -184,7 +201,6 @@ describe('SHOW_POINT_DEGREES', () => {
 
     expect(shown).toEqual(expect.arrayContaining(['R', 'S']))
     expect(shown.join('')).not.toContain('°')
-    expect(shown.join('')).not.toContain('♉\uFE0E')
     expect(shown.join('')).not.toContain('03′')
   })
 })
@@ -214,6 +230,22 @@ describe('SHOW_CUSP_DEGREES', () => {
     expect(shown).toHaveLength(12)
     // 28.6667 -> 28°40'
     expect(shown[0]).toBe('28°40′')
+  })
+
+  it('can use a colour separate from planet labels', () => {
+    mount()
+    const settings = {
+      ...default_settings,
+      SHOW_CUSP_DEGREES: true,
+      POINTS_TEXT_COLOR: '#334155',
+      CUSP_DEGREES_TEXT_COLOR: '#808080'
+    }
+    const paper = new SVG('chart', 500, 500, settings)
+    const radix = new Radix(paper, 250, 250, 200, data, settings)
+    radix.drawCuspDegrees()
+    expect(
+      document.querySelector('#chart-astrology-radix-cusp-degrees text')?.getAttribute('fill')
+    ).toBe('#808080')
   })
 })
 
@@ -309,6 +341,7 @@ describe('defaults are unchanged for existing consumers', () => {
     expect(default_settings.SIGNS_COLORS).toBeNull()
     expect(default_settings.AXIS_LINE_COLOR).toBeNull()
     expect(default_settings.POINTS_TEXT_COLOR).toBeNull()
+    expect(default_settings.CUSP_DEGREES_TEXT_COLOR).toBeNull()
     expect(default_settings.SHOW_POINT_DEGREES).toBe(false)
     expect(default_settings.SHOW_POINT_POSITIONS).toBe(true)
     expect(default_settings.SHOW_CUSP_DEGREES).toBe(false)

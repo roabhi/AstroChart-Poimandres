@@ -116,6 +116,7 @@ export interface Settings {
     SIGNS_COLORS: Record<string, string> | null;
     AXIS_LINE_COLOR: string | null;
     POINTS_TEXT_COLOR: string | null;
+    CUSP_DEGREES_TEXT_COLOR: string | null;
     SHOW_POINT_DEGREES: boolean;
     SHOW_POINT_POSITIONS: boolean;
     SHOW_CUSP_DEGREES: boolean;
