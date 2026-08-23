@@ -134,6 +134,10 @@ export interface Settings {
   // Show the degree / sign glyph / minutes rows beside each planet.
   SHOW_POINT_DEGREES: boolean
 
+  // Show position text beside each planet. False keeps only motion markers
+  // such as R or S, so the wheel can stay readable when aspect lines are hidden.
+  SHOW_POINT_POSITIONS: boolean
+
   // Show each house cusp's degree just outside the outer circle.
   SHOW_CUSP_DEGREES: boolean
 
@@ -367,6 +371,7 @@ const settings: Settings = {
   AXIS_LINE_COLOR: null,
   POINTS_TEXT_COLOR: null,
   SHOW_POINT_DEGREES: false,
+  SHOW_POINT_POSITIONS: true,
   SHOW_CUSP_DEGREES: false,
   FONT_FAMILY: 'serif',
   AXIS_POSITIONS: null,

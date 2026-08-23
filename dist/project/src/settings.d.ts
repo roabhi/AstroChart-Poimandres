@@ -117,6 +117,7 @@ export interface Settings {
     AXIS_LINE_COLOR: string | null;
     POINTS_TEXT_COLOR: string | null;
     SHOW_POINT_DEGREES: boolean;
+    SHOW_POINT_POSITIONS: boolean;
     SHOW_CUSP_DEGREES: boolean;
     FONT_FAMILY: string;
     AXIS_POSITIONS: {

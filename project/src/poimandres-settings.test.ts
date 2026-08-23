@@ -163,6 +163,30 @@ describe('SHOW_POINT_DEGREES', () => {
     ).map((t) => t.textContent)
     expect(shown).toContain('03′')
   })
+
+  it('can hide position labels while keeping motion markers', () => {
+    mount()
+    const settings = {
+      ...default_settings,
+      SHOW_POINT_DEGREES: true,
+      SHOW_POINT_POSITIONS: false,
+      SHOW_DIGNITIES_TEXT: false
+    }
+    const paper = new SVG('chart', 500, 500, settings)
+    const radix = new Radix(paper, 250, 250, 200, {
+      ...data,
+      planets: { Sun: [34.5, 1], Moon: [149.99, -0.2], Mars: [60.05, 0.001] }
+    }, settings)
+    radix.drawPoints()
+    const shown = Array.from(
+      document.querySelectorAll('#chart-astrology-radix-planets text')
+    ).map((t) => t.textContent)
+
+    expect(shown).toEqual(expect.arrayContaining(['R', 'S']))
+    expect(shown.join('')).not.toContain('°')
+    expect(shown.join('')).not.toContain('♉\uFE0E')
+    expect(shown.join('')).not.toContain('03′')
+  })
 })
 
 describe('SHOW_CUSP_DEGREES', () => {
@@ -286,6 +310,7 @@ describe('defaults are unchanged for existing consumers', () => {
     expect(default_settings.AXIS_LINE_COLOR).toBeNull()
     expect(default_settings.POINTS_TEXT_COLOR).toBeNull()
     expect(default_settings.SHOW_POINT_DEGREES).toBe(false)
+    expect(default_settings.SHOW_POINT_POSITIONS).toBe(true)
     expect(default_settings.SHOW_CUSP_DEGREES).toBe(false)
     expect(default_settings.FONT_FAMILY).toBe('serif')
     expect(default_settings.AXIS_POSITIONS).toBeNull()

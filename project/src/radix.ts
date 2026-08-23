@@ -193,13 +193,22 @@ class Radix {
       // SHOW_POINT_DEGREES off keeps the upstream label: a bare whole-degree
       // number. On, it becomes three rows -- degree, sign glyph, minutes --
       // matching how a printed chart states a position.
-      const dm = splitDegreeMinute(longitude)
       const zodiac = new Zodiac(this.data.cusps, this.settings)
-      const isRetrograde = Boolean(this.data.planets[point.name][1]) && zodiac.isRetrograde(this.data.planets[point.name][1])
+      const motionSpeed = this.data.planets[point.name][1]
+      const motionMarker = typeof motionSpeed === 'number'
+        ? zodiac.isRetrograde(motionSpeed)
+          ? 'R'
+          : motionSpeed <= 0.003
+            ? 'S'
+            : ''
+        : ''
 
       let textsToShow: string[]
 
-      if (this.settings.SHOW_POINT_DEGREES) {
+      if (!this.settings.SHOW_POINT_POSITIONS) {
+        textsToShow = motionMarker ? [motionMarker] : []
+      } else if (this.settings.SHOW_POINT_DEGREES) {
+        const dm = splitDegreeMinute(longitude)
         // Three rows: degree, sign, minutes -- how a printed chart states a
         // position. The retrograde marker rides on the SIGN row rather than
         // taking a fourth row of its own; a four-row stack is tall enough to
@@ -207,11 +216,11 @@ class Radix {
         // visibly scatters a tight cluster.
         textsToShow = [
           dm.degrees.toString() + '\u00B0',
-          SIGN_GLYPHS[Math.floor(normalizeAngle(longitude) / 30) % 12] + (isRetrograde ? ' R' : ''),
+          SIGN_GLYPHS[Math.floor(normalizeAngle(longitude) / 30) % 12] + (motionMarker ? ` ${motionMarker}` : ''),
           dm.minutes.toString().padStart(2, '0') + '\u2032'
         ]
       } else {
-        textsToShow = [(Math.floor(longitude) % 30).toString(), isRetrograde ? 'R' : '']
+        textsToShow = [(Math.floor(longitude) % 30).toString(), motionMarker]
       }
 
       if (this.settings.SHOW_DIGNITIES_TEXT)
